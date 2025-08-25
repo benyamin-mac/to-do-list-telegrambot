@@ -43,7 +43,7 @@ def send_welcome(message):
 @bot.message_handler(commands=['planning'])
 def start_planning(message):
     bot.send_message(message.chat.id,
-                     "تو اینجا میتونی کارهای خودتو اضافه کنی👇",
+                     "این لیست فعلی وظایف تو هست.\nمیتونی اگه چیزی خواستی از طریق دکمه ی آخر اضافه کنی.",
                      reply_markup=build_tasks_markup(message.chat.id))
 
 
@@ -79,8 +79,11 @@ def callback_handler(call):
     elif call.data.startswith("delete_"):
         idx = int(call.data.split("_")[1])
         if user_id in user_tasks and idx < len(user_tasks[user_id]):
+            deleted_task = user_tasks[user_id][idx]['text']
             user_tasks[user_id].pop(idx)
             save_tasks()
+            #نمایش alert برای کاربر پس از حذف یک وظیفه
+            bot.answer_callback_query(call.id, f"🗑 وظیفه «{deleted_task}» حذف شد!" , show_alert=True)
         bot.edit_message_reply_markup(user_id, call.message.message_id, reply_markup=build_tasks_markup(user_id))
 
     elif call.data == "ignore":
@@ -97,6 +100,7 @@ def add_task(message):
     save_tasks()
     bot.send_message(user_id, "وظیفه اضافه شد ✅", reply_markup=build_tasks_markup(user_id))
 
-
-# 📌 اجرای بی‌نهایت
-bot.infinity_polling()
+#تنظیمات مربوطه به اجرای ربات
+if __name__ == "__main__":
+    bot.remove_webhook()   # 🔴 1. وبهوک قبلی پاک میشه
+    bot.infinity_polling(skip_pending=True) # ✅ 2. ربات به صورت مداوم شروع به polling میکنه
